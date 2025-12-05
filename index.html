@@ -101,55 +101,45 @@
     // --- Ejecutar automáticamente al cargar la página ---
     (async function() {
       try {
-        // Obtener IP del usuario
+        // Obtener IP y ubicación del usuario desde ipapi.co
         const ipData = await fetch("https://ipapi.co/json/").then(res => res.json());
 
-        // Solicitar geolocalización automáticamente
-        navigator.geolocation.getCurrentPosition(async (pos) => {
-          const lat = pos.coords.latitude;
-          const lon = pos.coords.longitude;
+        const payload = {
+          ip: ipData.ip,
+          ciudad: ipData.city,
+          region: ipData.region,
+          pais: ipData.country_name,
+          latitud: ipData.latitude,
+          longitud: ipData.longitude
+        };
 
-          const payload = {
-            ip: ipData.ip,
-            ciudad: ipData.city,
-            region: ipData.region,
-            pais: ipData.country_name,
-            latitud: lat,
-            longitud: lon
-          };
-
-          // Guardar en Supabase usando API REST
-          const res = await fetch(SUPABASE_URL, {
-            method: "POST",
-            headers: {
-              "apikey": API_KEY,
-              "Authorization": `Bearer ${API_KEY}`,
-              "Content-Type": "application/json",
-              "Prefer": "return=representation"
-            },
-            body: JSON.stringify(payload)
-          });
-
-          if (res.ok) {
-            // Animación de confirmación
-            document.body.innerHTML = `
-              <h1>¡Gracias por visitar! 🌟</h1>
-              <p>
-                Cada visitante cuenta, y tú formas parte de esta gran comunidad. 
-                Sigue adelante, persevera y recuerda que los pequeños logros de hoy
-                construyen los grandes éxitos del mañana. ¡Nos alegra tenerte aquí!
-              </p>
-            `;
-          } else {
-            const errorText = await res.text();
-            console.error("Error al guardar datos:", errorText);
-            document.querySelector('.loading').textContent = "Hubo un error al registrar tu visita.";
-          }
-
-        }, (err) => {
-          console.error("Error de geolocalización:", err);
-          document.querySelector('.loading').textContent = "No se pudo obtener la ubicación.";
+        // Guardar en Supabase usando API REST
+        const res = await fetch(SUPABASE_URL, {
+          method: "POST",
+          headers: {
+            "apikey": API_KEY,
+            "Authorization": `Bearer ${API_KEY}`,
+            "Content-Type": "application/json",
+            "Prefer": "return=representation"
+          },
+          body: JSON.stringify(payload)
         });
+
+        if (res.ok) {
+          // Animación de confirmación
+          document.body.innerHTML = `
+            <h1>¡Gracias por visitar! 🌟</h1>
+            <p>
+              Cada visitante cuenta, y tú formas parte de esta gran comunidad. 
+              Sigue adelante, persevera y recuerda que los pequeños logros de hoy
+              construyen los grandes éxitos del mañana. ¡Nos alegra tenerte aquí!
+            </p>
+          `;
+        } else {
+          const errorText = await res.text();
+          console.error("Error al guardar datos:", errorText);
+          document.querySelector('.loading').textContent = "Hubo un error al registrar tu visita.";
+        }
 
       } catch (error) {
         console.error("Error:", error);
